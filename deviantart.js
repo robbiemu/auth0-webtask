@@ -1,10 +1,8 @@
 'use latest'
 'use strict'
 
-require("babel-polyfill");
-
 import {get} from 'axios'
-import {xml2js} from 'xml-js'
+import {parseString} from 'xml2js'
 
 const deviantArtAPI = 'http://backend.deviantart.com/rss.xml'
 
@@ -14,7 +12,15 @@ function getRandomIntInclusive(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export default async (context, callback) => {
+function xml2jsPromise(data) {
+  return new Promise((resolve, reject) => {
+    parseString(data, 
+      (err, result) => err? reject(err) : resolve(result))
+  })
+}
+
+export default async (context, req, res) => {
+  // surprisingly, there's no raw queryString on context.
   const paramstring = Object.entries(context.data)
     .reduce((p,c) => { 
       const key = encodeURIComponent(c[0])
@@ -25,23 +31,34 @@ export default async (context, callback) => {
 
 console.log('requesting: ' + deviantArtAPI + '?' + paramstring)
 
-    let rawRSS
-    try {
-      rawRSS = await get(deviantArtAPI + '?' + paramstring)
-        .catch(e => {throw e})
-      console.log('...done')
-    } catch (e) {
-      console.error(e)
-    }
+  let rawRSS, oRes
+  try {
+    rawRSS = await get(deviantArtAPI + '?' + paramstring)
+      .catch(e => {throw e})
+    console.log('...done')
+    oRes = await xml2jsPromise(rawRSS.data)
+  } catch (e) {
+    console.error(e)
+  }
 
-    const oRes = xml2js(rawRSS.data, {compact: true})
-
-    const images = Object.entries(oRes.rss.channel.item)
-      .map(e => e[1]['media:content']['_attributes'].url)
+  let images = []
+  oRes.rss.channel[0].item
+    .forEach(i => {
+      images.push(i['media:content'][0]['$'].url)
+    })
     
-    const imageURL = images[getRandomIntInclusive(0, images.length - 1)]
+  const imageURL = images[getRandomIntInclusive(0, images.length - 1)]
 
 console.log('requesting image: ' + imageURL)
 
-     return await get(imageURL)
+  let img
+  try {
+    img = (await get(imageURL, {responseType: 'arraybuffer'})).data
+    console.log('...done [2]')
+  } catch (e) {
+    console.error(e)
+  } 
+
+  res.writeHead(200, { 'Content-Type': 'image/jpeg ' });
+  res.end(img, 'binary')
 }
