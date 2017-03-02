@@ -1,0 +1,24 @@
+{
+  "name": "autho0-webtask",
+  "version": "1.0.0",
+  "description": "",
+  "main": "deviant.js",
+  "dependencies": {
+    "axios": "^0.15.3",
+    "xml-js": "^1.0.2"
+  },
+  "devDependencies": {
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-plugin-syntax-async-functions": "^6.1.4",
+    "babel-plugin-transform-regenerator": "^6.1.4",
+    "babel-polyfill": "^6.1.4",
+    "babel-preset-es2015": "^6.22.0"
+  },
+  "scripts": {
+    "deploy": "wt create dist/deviantart.js",
+    "build": "babel deviantart.js -o dist/deviantart.js",
+    "test": "node test.js"
+  },
+  "author": "Robert Collins",
+  "license": "ISC"
+}
