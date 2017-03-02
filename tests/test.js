@@ -1,4 +1,4 @@
-const dev = require('./dist/deviantart')
+const dev = require('../dist/deviantart')
 
 try {
   console.log(dev({data:{}}))

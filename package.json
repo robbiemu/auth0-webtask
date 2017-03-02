@@ -20,7 +20,7 @@
   "scripts": {
     "deploy": "wt create dist/deviantart.js",
     "build": "babel deviantart.js -o dist/deviantart.js",
-    "test": "node test.js"
+    "test": "node tests/test.js"
   },
   "author": "Robert Collins",
   "license": "ISC"
