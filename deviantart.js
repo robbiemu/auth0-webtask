@@ -1,8 +1,6 @@
 'use latest'
 'use strict'
 
-//require("babel-polyfill");
-
 import {get} from 'axios'
 import {parseString} from 'xml2js'
 
@@ -21,8 +19,7 @@ function xml2jsPromise(data) {
   })
 }
 
-/* here be magic */
-export default async (context, callback) => {
+export default async (context, req, res) => {
   // surprisingly, there's no raw queryString on context.
   const paramstring = Object.entries(context.data)
     .reduce((p,c) => { 
@@ -34,33 +31,34 @@ export default async (context, callback) => {
 
 console.log('requesting: ' + deviantArtAPI + '?' + paramstring)
 
-    // getting the RSS feed of images requested, either from a search configured 
-    // from the provided query string, or from the default
-    let rawRSS
-    try {
-      rawRSS = await get(deviantArtAPI + '?' + paramstring)
-        .catch(e => {throw e})
-      console.log('...done')
-    } catch (e) {
-      console.error(e)
-    }
+  let rawRSS, oRes
+  try {
+    rawRSS = await get(deviantArtAPI + '?' + paramstring)
+      .catch(e => {throw e})
+    console.log('...done')
+    oRes = await xml2jsPromise(rawRSS.data)
+  } catch (e) {
+    console.error(e)
+  }
 
-    let oRes
-    try {
-      oRes = await xml2jsPromise(rawRSS.data)
-    } catch(e) {
-      console.error(e)
-    }
-
-    let images = []
-    oRes.rss.channel[0].item
-      .forEach(i => {
-        images.push(i['media:content'][0]['$'].url)
-      })
+  let images = []
+  oRes.rss.channel[0].item
+    .forEach(i => {
+      images.push(i['media:content'][0]['$'].url)
+    })
     
-    const imageURL = images[getRandomIntInclusive(0, images.length - 1)]
+  const imageURL = images[getRandomIntInclusive(0, images.length - 1)]
 
 console.log('requesting image: ' + imageURL)
 
-     return await get(imageURL)
+  let img
+  try {
+    img = (await get(imageURL, {responseType: 'arraybuffer'})).data
+    console.log('...done [2]')
+  } catch (e) {
+    console.error(e)
+  } 
+
+  res.writeHead(200, { 'Content-Type': 'image/jpeg ' });
+  res.end(img, 'binary')
 }
