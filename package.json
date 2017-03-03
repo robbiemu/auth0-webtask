@@ -4,9 +4,9 @@
   "description": "",
   "main": "deviant.js",
   "dependencies": {
-    "axios": "^0.15.3",
-    "btoa": "^1.1.2",
-    "xml2js": "^0.4.17"
+    "axios": "0.15.2",
+    "object.entries": "^1.0.4",
+    "xml2js": "0.4.8"
   },
   "devDependencies": {
     "babel-plugin-add-module-exports": "^0.2.1",
@@ -14,7 +14,7 @@
     "babel-preset-es2015": "^6.22.0"
   },
   "scripts": {
-    "deploy": "wt create dist/deviantart.js",
+    "deploy": "wt create --bundle dist/deviantart.js",
     "build": "babel deviantart.js -o dist/deviantart.js",
     "test": "node tests/test.js"
   },
