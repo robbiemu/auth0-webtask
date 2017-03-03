@@ -4,6 +4,8 @@
 import {get} from 'axios'
 import {parseString} from 'xml2js'
 
+import entries from 'object.entries' // node 4.4.7 shim
+
 const deviantArtAPI = 'http://backend.deviantart.com/rss.xml'
 
 function getRandomIntInclusive(min, max) {
@@ -21,7 +23,7 @@ function xml2jsPromise(data) {
 
 export default async (context, req, res) => {
   // surprisingly, there's no raw queryString on context.
-  const paramstring = Object.entries(context.data)
+  const paramstring = entries(context.data)
     .reduce((p,c) => { 
       const key = encodeURIComponent(c[0])
       const val = encodeURIComponent(c[1])
@@ -31,6 +33,7 @@ export default async (context, req, res) => {
 
 console.log('requesting: ' + deviantArtAPI + '?' + paramstring)
 
+  // get the rss of images to select from
   let rawRSS, oRes
   try {
     rawRSS = await get(deviantArtAPI + '?' + paramstring)
@@ -41,6 +44,7 @@ console.log('requesting: ' + deviantArtAPI + '?' + paramstring)
     console.error(e)
   }
 
+  // pick at random
   let images = []
   oRes.rss.channel[0].item
     .forEach(i => {
@@ -51,6 +55,7 @@ console.log('requesting: ' + deviantArtAPI + '?' + paramstring)
 
 console.log('requesting image: ' + imageURL)
 
+  // fetch and serve
   let img
   try {
     img = (await get(imageURL, {responseType: 'arraybuffer'})).data
